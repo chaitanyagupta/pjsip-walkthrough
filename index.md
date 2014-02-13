@@ -188,6 +188,8 @@ pj_str_t test8(pj_pool_t *pool) {
 }
 ```
 
+To run these tests: https://gist.github.com/chaitanyagupta/8969995
+
 ---
 
 # Inheritance
