@@ -626,7 +626,7 @@ Ref: https://trac.pjsip.org/repos/wiki/PJSUA_Initialization
  * `log_filename` -- log filename
  * `cb` -- callback for custom logging
 
-* If neither `log_filename` nor `cb` are provided, logs are writting to stdout.
+* If neither `log_filename` nor `cb` are provided, logs are written to stdout.
 
 * Example -- send logs to `stderr`
 
@@ -718,6 +718,8 @@ Ref: https://trac.pjsip.org/repos/wiki/PJSUA_Initialization
         return;
     }
 
+---
+
 # Add an account -- pjsua_account_config
 
 * What is it?
@@ -731,8 +733,8 @@ Ref: https://trac.pjsip.org/repos/wiki/PJSUA_Initialization
         ...
 
 * Important fields
- * `id` -- full SIP URL e.g. "Chaitanya Gupta" <cg@sip.talk.to>
- * `reg_uri` -- URL to be sent for registration e.g. cg@sip.talk.to
+ * `id` -- full SIP URL e.g. `"Chaitanya Gupta" <sip:cg@sip.talk.to>`
+ * `reg_uri` -- URL to be sent for registration e.g. `sip:cg@sip.talk.to`
  * `cred_count`, `cred_info` -- account credentials
  * `proxy_cnt`, `proxy` -- SIP proxy details
  * `reg_timeout` -- SIP registration timeout
@@ -855,3 +857,9 @@ Assume we want to send an "Auth-Token" header with every REGISTER request
         NSLog(@"call is disconnected");
       }
     }
+
+* Callbacks called in worker thread (if `pjsua_config.thread_cnt > 0`)
+
+* Use `pjsua_call_get_info` methods to get call info immediately (the call object might go away by the time you go back to your own thread)
+
+---
