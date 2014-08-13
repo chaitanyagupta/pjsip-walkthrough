@@ -37,6 +37,33 @@ Ref: http://www.pjsip.org/docs/latest/pjsip/docs/html/index.htm
 
 ---
 
+# Error Handling
+
+* Like most other C programs, error handling is done by examining return value
+
+* Functions that can result in an error return `pj_status_t`
+ * Many such functions
+
+* Check for error and print if there is one
+
+        pj_status_t status = pjsua_create();
+        if (status != PJ_SUCCESS) {
+            // macro version, is conditionally compiled
+            PJ_PERROR(2, (__FILE__, status, "Couldn't create pjsua"));
+            
+            // function version, always compiled
+            pj_perror(3, "module", status, "Couldn't create pjsua");
+            
+            // or capture the error string in a buffer; this could be used, for
+            // example, to provide descriptive info with an error
+            char buf[PJ_ERR_MSG_SIZE];
+            pj_strerror(status, buf, PJ_ERR_MSG_SIZE);
+        }
+
+* Always check if a pjsip function returns `pj_status_t`
+
+---
+
 # Memory Pool
 
 * For allocation of objects, consider using pjlib's memory pool instead of malloc/free
@@ -734,7 +761,7 @@ Ref: https://trac.pjsip.org/repos/wiki/PJSUA_Initialization
 
 * Important fields
  * `id` -- full SIP URL e.g. `"Chaitanya Gupta" <sip:cg@sip.talk.to>`
- * `reg_uri` -- URL to be sent for registration e.g. `sip:cg@sip.talk.to`
+ * `reg_uri` -- registrar URL e.g. `sip:sip.talk.to`
  * `cred_count`, `cred_info` -- account credentials
  * `proxy_cnt`, `proxy` -- SIP proxy details
  * `reg_timeout` -- SIP registration timeout
@@ -746,7 +773,7 @@ Ref: https://trac.pjsip.org/repos/wiki/PJSUA_Initialization
 
 ---
 
-# Add an account -- sending a custom header with REGISTER
+# Send a custom header with REGISTER
 
 Assume we want to send an "Auth-Token" header with every REGISTER request
 
@@ -855,11 +882,35 @@ Assume we want to send an "Auth-Token" header with every REGISTER request
         NSLog(@"call is connected");
       } else if (call_info.state == PJSIP_INV_STATE_DISCONNECTED) {
         NSLog(@"call is disconnected");
+      } else (call_info.state == PJSIP_INV_STATE_EARLY) {
+        // Query `event` for more details
+        // e.g. to know about when the call rings on the other end
       }
     }
 
 * Callbacks called in worker thread (if `pjsua_config.thread_cnt > 0`)
 
 * Use `pjsua_call_get_info` methods to get call info immediately (the call object might go away by the time you go back to your own thread)
+
+---
+
+# Send generic requests
+
+    static void send_options_request(account_id) {
+      pjsip_method method;
+      pj_str_t method_string = pj_str("OPTIONS");
+      pj_str_t target = pj_str("sip:alice@example.com");
+      pjsip_method_init_np(&method, &method_string);
+      pjsip_tx_data *tx_data;
+      pj_status_t status = pjsua_acc_create_request(account_id, &method, &target, &tx_data);
+      if (status != PJ_SUCCESS) {
+        NSLog(@"Couldn't create request");
+      } else {
+        status = pjsip_endpt_send_request(pjsua_get_pjsip_endpt(), tx_data, -1, NULL, NULL);
+        if (status != PJ_SUCCESS) {
+          NSLog(@"Couldn't send request");
+        }
+      }
+    }
 
 ---
